@@ -2,8 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
-use App\Models\Barang;
-use App\Models\Kategori;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return auth()->check()
@@ -20,14 +19,14 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        $totalBarang = Barang::count();
-        $totalKategori = Kategori::count();
-        $totalStok = Barang::sum('stok');
-        $recentBarangs = Barang::latest()->take(5)->get();
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
 
-        return view('dashboard', compact('totalBarang', 'totalKategori', 'totalStok', 'recentBarangs'));
-    })->name('dashboard');
+    Route::post('/barangs', [DashboardController::class, 'storeBarang'])
+        ->name('barangs.store.web');
+
+    Route::post('/kategoris', [DashboardController::class, 'storeKategori'])
+        ->name('kategoris.store.web');
 
     Route::post('/logout', [LoginController::class, 'logout'])
         ->name('logout');
