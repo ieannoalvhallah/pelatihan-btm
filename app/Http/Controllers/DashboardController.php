@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\Kategori;
+use App\Models\Penjualan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -13,10 +15,69 @@ class DashboardController extends Controller
         $totalBarang = Barang::count();
         $totalKategori = Kategori::count();
         $totalStok = Barang::sum('stok');
+        $totalPenjualan = Penjualan::count();
+        $totalPendapatan = Penjualan::sum('total_harga');
+
         $barangs = Barang::latest()->get();
         $kategoris = Kategori::orderBy('nama_kategori')->get();
+        $penjualans = Penjualan::with('barang')->latest()->get();
 
-        return view('dashboard', compact('totalBarang', 'totalKategori', 'totalStok', 'barangs', 'kategoris'));
+        $activeMenu = request('menu', 'dashboard');
+
+        return view('dashboard', compact(
+            'totalBarang',
+            'totalKategori',
+            'totalStok',
+            'totalPenjualan',
+            'totalPendapatan',
+            'barangs',
+            'kategoris',
+            'penjualans',
+            'activeMenu'
+        ));
+    }
+
+    public function storePenjualan(Request $request)
+    {
+        $validated = $request->validate([
+            'barang_id' => 'required|exists:barangs,id',
+            'jumlah' => 'required|integer|min:1',
+            'nama_pelanggan' => 'nullable|string|max:100',
+            'tanggal_penjualan' => 'required|date',
+            'catatan' => 'nullable|string',
+        ]);
+
+        $barang = Barang::findOrFail($validated['barang_id']);
+
+        if ($barang->stok < $validated['jumlah']) {
+            return redirect()->route('dashboard', ['menu' => 'penjualan'])
+                ->withErrors(['jumlah' => "Stok '{$barang->nama_barang}' tidak mencukupi! Tersisa {$barang->stok} {$barang->satuan}."])
+                ->withInput();
+        }
+
+        DB::transaction(function () use ($validated, $barang) {
+            $hargaSatuan = $barang->harga_jual;
+            $totalHarga = $hargaSatuan * $validated['jumlah'];
+
+            $todayCount = Penjualan::whereDate('created_at', today())->count();
+            $noTransaksi = 'PJL-' . date('Ymd') . '-' . str_pad($todayCount + 1, 4, '0', STR_PAD_LEFT);
+
+            Penjualan::create([
+                'no_transaksi' => $noTransaksi,
+                'barang_id' => $barang->id,
+                'nama_pelanggan' => $validated['nama_pelanggan'] ?: 'Pelanggan Umum',
+                'jumlah' => $validated['jumlah'],
+                'harga_satuan' => $hargaSatuan,
+                'total_harga' => $totalHarga,
+                'tanggal_penjualan' => $validated['tanggal_penjualan'],
+                'catatan' => $validated['catatan'] ?? null,
+            ]);
+
+            $barang->decrement('stok', $validated['jumlah']);
+        });
+
+        return redirect()->route('dashboard', ['menu' => 'penjualan'])
+            ->with('success', "Transaksi penjualan berhasil disimpan dan stok {$barang->nama_barang} otomatis berkurang {$validated['jumlah']} {$barang->satuan}!");
     }
 
     public function storeBarang(Request $request)

@@ -30,6 +30,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/kategoris', [DashboardController::class, 'storeKategori'])
         ->name('kategoris.store.web');
 
+    Route::post('/penjualans', [DashboardController::class, 'storePenjualan'])
+        ->name('penjualans.store.web');
+
     Route::post('/logout', [LoginController::class, 'logout'])
         ->name('logout');
 });

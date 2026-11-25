@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Barang extends Model
 {
@@ -30,5 +31,10 @@ class Barang extends Model
             'harga_jual' => 'decimal:2',
             'stok' => 'integer',
         ];
+    }
+
+    public function penjualans(): HasMany
+    {
+        return $this->hasMany(Penjualan::class, 'barang_id');
     }
 }
