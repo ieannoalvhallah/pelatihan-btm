@@ -41,12 +41,6 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <a href="http://localhost:5173" target="_blank" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition">
-                        <span>Buka Frontend React</span>
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                    </a>
                     <div class="text-right hidden sm:block">
                         <div class="text-sm font-semibold text-slate-800">{{ auth()->user()->name }}</div>
                         <div class="text-xs text-slate-500">{{ auth()->user()->email }}</div>
